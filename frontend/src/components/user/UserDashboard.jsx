@@ -39,6 +39,10 @@ const UserDashboard = () => {
     const [selectedSector, setSelectedSector] = useState('All');
     const [selectedIndustry, setSelectedIndustry] = useState('All');
 
+    // Entry Zone and Breakout Stocks state
+    const [entryZoneStocks, setEntryZoneStocks] = useState([]);
+    const [breakoutStocks, setBreakoutStocks] = useState([]);
+
     useEffect(() => {
         // Get data from window variables set by Flask template
         if (window.userData) {
@@ -59,6 +63,15 @@ const UserDashboard = () => {
             }
         }, 30000);
         return () => clearInterval(interval);
+    }, []);
+
+    useEffect(() => {
+        fetch('/api/stocks/entry-zone')
+            .then(res => res.json())
+            .then(data => setEntryZoneStocks(data.stocks || []));
+        fetch('/api/stocks/breakout')
+            .then(res => res.json())
+            .then(data => setBreakoutStocks(data.stocks || []));
     }, []);
 
     const refreshUserData = async () => {
@@ -962,119 +975,205 @@ const UserDashboard = () => {
                         )}
                     </div>
                 )}
-            </div>
 
-            {/* Subscription Modal */}
-            {showSubscriptionModal && (
-                <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-                    <div className="modal-dialog modal-lg modal-dialog-centered">
-                        <div className="modal-content">
-                            <div className="modal-header border-0">
-                                <h4 className="modal-title fw-bold">Choose Your Plan</h4>
-                                <button 
-                                    type="button" 
-                                    className="btn-close" 
-                                    onClick={() => setShowSubscriptionModal(false)}
-                                ></button>
+                {/* Entry Zone and Breakout Stocks */}
+                <div className="row">
+                    <div className="col-lg-6 mb-4">
+                        <div className="card">
+                            <div className="card-header">
+                                <h5 className="card-title mb-0">Entry Zone Stocks</h5>
                             </div>
-                            <div className="modal-body p-4">
-                                <div className="row g-4">
-                                    {/* Free Plan */}
-                                    <div className="col-md-4">
-                                        <div className="card border-2 h-100 text-center">
-                                            <div className="card-body d-flex flex-column">
-                                                <h5 className="card-title fw-bold text-muted">Free</h5>
-                                                <div className="mb-3">
-                                                    <span className="display-4 fw-bold">$0</span>
-                                                    <span className="text-muted">/month</span>
-                                                </div>
-                                                <ul className="list-unstyled text-start mb-4">
-                                                    <li className="mb-2">✓ Basic sector charts</li>
-                                                    <li className="mb-2">✓ 1 watchlist</li>
-                                                    <li className="mb-2">✓ Limited stock data</li>
-                                                    <li className="mb-2">✓ Community support</li>
-                                                </ul>
-                                                <button className="btn btn-outline-primary mt-auto" disabled>
-                                                    Current Plan
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Medium Plan */}
-                                    <div className="col-md-4">
-                                        <div className="card border-primary border-2 h-100 text-center">
-                                            <div className="card-body d-flex flex-column">
-                                                <h5 className="card-title fw-bold text-primary">Medium</h5>
-                                                <div className="mb-3">
-                                                    <span className="display-4 fw-bold text-primary">$9</span>
-                                                    <span className="text-muted">.99/month</span>
-                                                </div>
-                                                <ul className="list-unstyled text-start mb-4">
-                                                    <li className="mb-2">✓ All sector charts</li>
-                                                    <li className="mb-2">✓ 5 watchlists</li>
-                                                    <li className="mb-2">✓ Real-time data</li>
-                                                    <li className="mb-2">✓ Advanced analytics</li>
-                                                    <li className="mb-2">✓ Email alerts</li>
-                                                    <li className="mb-2">✓ Priority support</li>
-                                                </ul>
-                                                <button 
-                                                    className="btn btn-primary mt-auto"
-                                                    onClick={() => handleGetStarted('medium')}
-                                                >
-                                                    Get Started
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Pro Plan */}
-                                    <div className="col-md-4">
-                                        <div className="card border-warning border-2 h-100 text-center position-relative">
-                                            <div className="position-absolute top-0 start-50 translate-middle">
-                                                <span className="badge bg-warning text-dark px-3 py-2 rounded-pill">
-                                                    <i className="fas fa-star me-1"></i>Most Popular
-                                                </span>
-                                            </div>
-                                            <div className="card-body d-flex flex-column pt-4">
-                                                <h5 className="card-title fw-bold text-warning">Pro</h5>
-                                                <div className="mb-3">
-                                                    <span className="display-4 fw-bold text-warning">$19</span>
-                                                    <span className="text-muted">.99/month</span>
-                                                </div>
-                                                <ul className="list-unstyled text-start mb-4">
-                                                    <li className="mb-2">✓ Everything in Medium</li>
-                                                    <li className="mb-2">✓ Unlimited watchlists</li>
-                                                    <li className="mb-2">✓ AI-powered insights</li>
-                                                    <li className="mb-2">✓ Custom alerts</li>
-                                                    <li className="mb-2">✓ API access</li>
-                                                    <li className="mb-2">✓ White-label reports</li>
-                                                    <li className="mb-2">✓ 24/7 dedicated support</li>
-                                                </ul>
-                                                <button 
-                                                    className="btn btn-warning text-dark fw-bold mt-auto"
-                                                    onClick={() => handleGetStarted('pro')}
-                                                >
-                                                    Get Started
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
+                            <div className="card-body">
+                                <div className="table-responsive">
+                                    <table className="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Symbol</th>
+                                                <th>Name</th>
+                                                <th>Sector</th>
+                                                <th>Price</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {entryZoneStocks.length === 0 ? (
+                                                <tr><td colSpan="4" className="text-center text-muted">No records</td></tr>
+                                            ) : (
+                                                entryZoneStocks.map((stock, idx) => (
+                                                    <tr key={stock.symbol || idx}>
+                                                        <td>{stock.symbol}</td>
+                                                        <td>{stock.name}</td>
+                                                        <td>{stock.sector}</td>
+                                                        <td>{stock.price}</td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
                                 </div>
-                                
-                                <div className="text-center mt-4">
-                                    <p className="text-muted mb-0">
-                                        <i className="fas fa-shield-alt me-2"></i>
-                                        30-day money-back guarantee • Cancel anytime • Secure payment
-                                    </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="col-lg-6 mb-4">
+                        <div className="card">
+                            <div className="card-header">
+                                <h5 className="card-title mb-0">Breakout Stocks</h5>
+                            </div>
+                            <div className="card-body">
+                                <div className="table-responsive">
+                                    <table className="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Symbol</th>
+                                                <th>Name</th>
+                                                <th>Sector</th>
+                                                <th>Price</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {breakoutStocks.length === 0 ? (
+                                                <tr><td colSpan="4" className="text-center text-muted">No records</td></tr>
+                                            ) : (
+                                                breakoutStocks.map((stock, idx) => (
+                                                    <tr key={stock.symbol || idx}>
+                                                        <td>{stock.symbol}</td>
+                                                        <td>{stock.name}</td>
+                                                        <td>{stock.sector}</td>
+                                                        <td>{stock.price}</td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            )}
+
+                {/* Subscription Modal */}
+                {showSubscriptionModal && (
+                    <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                        <div className="modal-dialog modal-lg modal-dialog-centered">
+                            <div className="modal-content">
+                                <div className="modal-header border-0">
+                                    <h4 className="modal-title fw-bold">Choose Your Plan</h4>
+                                    <button 
+                                        type="button" 
+                                        className="btn-close" 
+                                        onClick={() => setShowSubscriptionModal(false)}
+                                    ></button>
+                                </div>
+                                <div className="modal-body p-4">
+                                    <div className="row g-4">
+                                        {/* Free Plan */}
+                                        <div className="col-md-4">
+                                            <div className="card border-2 h-100 text-center">
+                                                <div className="card-body d-flex flex-column">
+                                                    <h5 className="card-title fw-bold text-muted">Free</h5>
+                                                    <div className="mb-3">
+                                                        <span className="display-4 fw-bold">$0</span>
+                                                        <span className="text-muted">/month</span>
+                                                    </div>
+                                                    <ul className="list-unstyled text-start mb-4">
+                                                        <li className="mb-2">✓ Basic sector charts</li>
+                                                        <li className="mb-2">✓ 1 watchlist</li>
+                                                        <li className="mb-2">✓ Limited stock data</li>
+                                                        <li className="mb-2">✓ Community support</li>
+                                                    </ul>
+                                                    <button className="btn btn-outline-primary mt-auto" disabled>
+                                                        Current Plan
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Medium Plan */}
+                                        <div className="col-md-4">
+                                            <div className="card border-primary border-2 h-100 text-center">
+                                                <div className="card-body d-flex flex-column">
+                                                    <h5 className="card-title fw-bold text-primary">Medium</h5>
+                                                    <div className="mb-3">
+                                                        <span className="display-4 fw-bold text-primary">$9</span>
+                                                        <span className="text-muted">.99/month</span>
+                                                    </div>
+                                                    <ul className="list-unstyled text-start mb-4">
+                                                        <li className="mb-2">✓ All sector charts</li>
+                                                        <li className="mb-2">✓ 5 watchlists</li>
+                                                        <li className="mb-2">✓ Real-time data</li>
+                                                        <li className="mb-2">✓ Advanced analytics</li>
+                                                        <li className="mb-2">✓ Email alerts</li>
+                                                        <li className="mb-2">✓ Priority support</li>
+                                                    </ul>
+                                                    <button 
+                                                        className="btn btn-primary mt-auto"
+                                                        onClick={() => handleGetStarted('medium')}
+                                                    >
+                                                        Get Started
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Pro Plan */}
+                                        <div className="col-md-4">
+                                            <div className="card border-warning border-2 h-100 text-center position-relative">
+                                                <div className="position-absolute top-0 start-50 translate-middle">
+                                                    <span className="badge bg-warning text-dark px-3 py-2 rounded-pill">
+                                                        <i className="fas fa-star me-1"></i>Most Popular
+                                                    </span>
+                                                </div>
+                                                <div className="card-body d-flex flex-column pt-4">
+                                                    <h5 className="card-title fw-bold text-warning">Pro</h5>
+                                                    <div className="mb-3">
+                                                        <span className="display-4 fw-bold text-warning">$19</span>
+                                                        <span className="text-muted">.99/month</span>
+                                                    </div>
+                                                    <ul className="list-unstyled text-start mb-4">
+                                                        <li className="mb-2">✓ Everything in Medium</li>
+                                                        <li className="mb-2">✓ Unlimited watchlists</li>
+                                                        <li className="mb-2">✓ AI-powered insights</li>
+                                                        <li className="mb-2">✓ Custom alerts</li>
+                                                        <li className="mb-2">✓ API access</li>
+                                                        <li className="mb-2">✓ White-label reports</li>
+                                                        <li className="mb-2">✓ 24/7 dedicated support</li>
+                                                    </ul>
+                                                    <button 
+                                                        className="btn btn-warning text-dark fw-bold mt-auto"
+                                                        onClick={() => handleGetStarted('pro')}
+                                                    >
+                                                        Get Started
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="text-center mt-4">
+                                        <p className="text-muted mb-0">
+                                            <i className="fas fa-shield-alt me-2"></i>
+                                            30-day money-back guarantee • Cancel anytime • Secure payment
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
         </div>
     );
 };
 
 export default UserDashboard;
+
+MOCK_USERS = [
+    {
+        'id': '1',
+        'email': 'admin@tradinggrow.com',
+        'full_name': 'Admin User',
+        'subscription_tier': 'pro',
+        'is_admin': True,
+        'created_at': '2024-01-01T00:00:00Z'
+    },
+    // ... other users ...
+]

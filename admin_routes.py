@@ -1,7 +1,21 @@
+
 from flask import Blueprint, render_template, session, redirect, url_for, jsonify, request
 import datetime
 import csv
 import io
+from models import StockScreening, Watchlist, User
+from app import db
+import json
+
+admin_bp = Blueprint('admin', __name__)
+
+from flask import Blueprint, render_template, session, redirect, url_for, jsonify, request
+import datetime
+import csv
+import io
+from models import StockScreening
+from app import db
+import json
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -11,6 +25,59 @@ def require_admin_session():
     if not user_data or not user_data.get('is_admin', False):
         return False
     return True
+
+# TEMPORARY: Public test endpoint to list all users
+@admin_bp.route('/admin/api/test-all-users', methods=['GET'])
+def test_all_users():
+    all_users = User.query.all()
+    result = []
+    for u in all_users:
+        result.append({
+            'id': u.id,
+            'email': getattr(u, 'email', None),
+            'full_name': getattr(u, 'full_name', None),
+            'subscription_tier': getattr(u, 'subscription_tier', None)
+        })
+    return jsonify({'success': True, 'users': result})
+
+# TEMPORARY: Public test endpoint to verify Entry Zone and Breakout watchlists data
+@admin_bp.route('/admin/api/test-all-watchlists', methods=['GET'])
+def test_all_watchlists():
+    all_watchlists = Watchlist.query.all()
+    result = []
+    for wl in all_watchlists:
+        result.append({
+            'id': wl.id,
+            'name': wl.name,
+            'user_id': wl.user_id,
+            'watchlist_type': wl.watchlist_type,
+            'stocks': wl.stocks,
+            'created_at': wl.created_at.isoformat() if wl.created_at else None
+        })
+    return jsonify({'success': True, 'watchlists': result})
+
+# Entry Zone and Breakout Stocks endpoints
+# Get all Entry Zone Stocks (admin)
+@admin_bp.route('/admin/api/entry-zone-stocks', methods=['GET'])
+def get_entry_zone_stocks():
+    if not require_admin_session():
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+    entry_lists = Watchlist.query.filter_by(watchlist_type='entry').all()
+    stocks = []
+    for wl in entry_lists:
+        stocks.extend(wl.stocks)
+    return jsonify({'success': True, 'stocks': stocks})
+
+# Get all Breakout Stocks (admin)
+@admin_bp.route('/admin/api/breakout-stocks', methods=['GET'])
+def get_breakout_stocks():
+    if not require_admin_session():
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+    breakout_lists = Watchlist.query.filter_by(watchlist_type='breakout').all()
+    stocks = []
+    for wl in breakout_lists:
+        stocks.extend(wl.stocks)
+    return jsonify({'success': True, 'stocks': stocks})
 
 # Mock data for admin functionality
 MOCK_USERS = [
@@ -176,14 +243,89 @@ def admin_logout():
     else:
         return redirect('/admin/login')
 
+
 # API Endpoints
+
+# In-memory mock screenings list
+MOCK_SCREENINGS = [
+    {
+        'id': 1,
+        'name': 'High Growth Stocks',
+        'criteria': {
+            'min_price': 10,
+            'max_price': 1000,
+            'min_volume': 100000,
+            'min_market_cap': 1000000000,
+            'pe_ratio_max': 50,
+            'sectors': ['Technology', 'Healthcare']
+        },
+        'results_data': {'stocks': []},
+        'created_at': '2024-03-15T10:00:00Z'
+    }
+]
+
+@admin_bp.route('/admin/stock-screening/create', methods=['POST'])
+def create_stock_screening():
+    if not require_admin_session():
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+    data = request.get_json()
+    if not data or not data.get('name'):
+        return jsonify({'success': False, 'error': 'Missing screening name'}), 400
+    criteria = data.get('criteria', {})
+    results = data.get('results_data', {'stocks': []})
+    screening = StockScreening(
+        name=data['name'],
+        criteria=criteria,
+        results=results,
+        created_by='1'  # TODO: Use real admin id from session
+    )
+    screening.save()
+    return jsonify({'success': True, 'screening': {
+        'id': screening.id,
+        'name': screening.name,
+        'criteria': screening.criteria_data,
+        'results_data': screening.results_data,
+        'created_at': screening.created_at.isoformat() + 'Z'
+    }})
+
+# List all screenings (for admin dashboard)
+@admin_bp.route('/admin/api/stock-screenings', methods=['GET'])
+def list_stock_screenings():
+    if not require_admin_session():
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+    screenings = StockScreening.get_all()
+    return jsonify({'success': True, 'screenings': [
+        {
+            'id': s.id,
+            'name': s.name,
+            'criteria_data': s.criteria_data,
+            'results_data': s.results_data,
+            'created_at': s.created_at.isoformat() + 'Z'
+        } for s in screenings
+    ]})
+
+# Get a single screening by id
+@admin_bp.route('/admin/api/stock-screenings/<screening_id>', methods=['GET'])
+def get_stock_screening(screening_id):
+    if not require_admin_session():
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+    screening = StockScreening.get(screening_id)
+    if not screening:
+        return jsonify({'success': False, 'error': 'Screening not found'}), 404
+    return jsonify({'success': True, 'screening': {
+        'id': screening.id,
+        'name': screening.name,
+        'criteria_data': screening.criteria_data,
+        'results_data': screening.results_data,
+        'created_at': screening.created_at.isoformat() + 'Z'
+    }})
 
 @admin_bp.route('/admin/api/dashboard-data')
 def admin_dashboard_data():
     """Get admin dashboard statistics"""
     if not require_admin_session():
         return jsonify({'error': 'Unauthorized'}), 401
-    
+    screenings = StockScreening.query.order_by(StockScreening.created_at.desc()).all()
     return jsonify({
         'success': True,
         'data': {
@@ -192,21 +334,15 @@ def admin_dashboard_data():
                 'pro_users': len([u for u in MOCK_USERS if u['subscription_tier'] == 'pro']),
                 'medium_users': len([u for u in MOCK_USERS if u['subscription_tier'] == 'medium']),
                 'free_users': len([u for u in MOCK_USERS if u['subscription_tier'] == 'free']),
-                'total_screenings': 89
+                'total_screenings': len(screenings)
             },
             'screenings': [
                 {
-                    'id': 1,
-                    'name': 'High Growth Stocks',
-                    'results_count': 23,
-                    'created_at': '2024-03-15T10:00:00Z'
-                },
-                {
-                    'id': 2,
-                    'name': 'Value Stocks',
-                    'results_count': 18,
-                    'created_at': '2024-03-14T15:30:00Z'
-                }
+                    'id': s.id,
+                    'name': s.name,
+                    'results_count': len(s.results_data.get('stocks', [])),
+                    'created_at': s.created_at.isoformat() + 'Z'
+                } for s in screenings
             ]
         }
     })

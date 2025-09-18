@@ -15,6 +15,10 @@ const AdminDashboard = ({ initialData }) => {
     const [loading, setLoading] = useState(true);
     const [screenings, setScreenings] = useState([]);
 
+    // Entry Zone and Breakout Stocks state
+    const [entryZoneStocks, setEntryZoneStocks] = useState([]);
+    const [breakoutStocks, setBreakoutStocks] = useState([]);
+
     const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
     // Prepare data for charts
@@ -133,6 +137,18 @@ const AdminDashboard = ({ initialData }) => {
         const interval = setInterval(refreshData, 30000);
         return () => clearInterval(interval);
     }, []);
+
+    // Fetch Entry Zone and Breakout Stocks
+    useEffect(() => {
+        if (activeTab === 'overview') {
+            fetch('/admin/api/entry-zone-stocks')
+                .then(res => res.json())
+                .then(data => setEntryZoneStocks(data.stocks || []));
+            fetch('/admin/api/breakout-stocks')
+                .then(res => res.json())
+                .then(data => setBreakoutStocks(data.stocks || []));
+        }
+    }, [activeTab]);
 
     const StatCard = ({ title, value, icon, color, trend }) => (
         <div className="col-md-3 mb-4">
@@ -270,6 +286,81 @@ const AdminDashboard = ({ initialData }) => {
                             color="warning" 
                             trend="+3%" 
                         />
+                    </div>
+
+                    {/* Entry Zone Stocks Table */}
+                    <div className="row">
+                        <div className="col-lg-6 mb-4">
+                            <div className="card">
+                                <div className="card-header">
+                                    <h5 className="card-title mb-0">Entry Zone Stocks</h5>
+                                </div>
+                                <div className="card-body">
+                                    <div className="table-responsive">
+                                        <table className="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Symbol</th>
+                                                    <th>Name</th>
+                                                    <th>Sector</th>
+                                                    <th>Price</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {entryZoneStocks.length === 0 ? (
+                                                    <tr><td colSpan="4" className="text-center text-muted">No records</td></tr>
+                                                ) : (
+                                                    entryZoneStocks.map((stock, idx) => (
+                                                        <tr key={stock.symbol || idx}>
+                                                            <td>{stock.symbol}</td>
+                                                            <td>{stock.name}</td>
+                                                            <td>{stock.sector}</td>
+                                                            <td>{stock.price}</td>
+                                                        </tr>
+                                                    ))
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {/* Breakout Stocks Table */}
+                        <div className="col-lg-6 mb-4">
+                            <div className="card">
+                                <div className="card-header">
+                                    <h5 className="card-title mb-0">Breakout Stocks</h5>
+                                </div>
+                                <div className="card-body">
+                                    <div className="table-responsive">
+                                        <table className="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Symbol</th>
+                                                    <th>Name</th>
+                                                    <th>Sector</th>
+                                                    <th>Price</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {breakoutStocks.length === 0 ? (
+                                                    <tr><td colSpan="4" className="text-center text-muted">No records</td></tr>
+                                                ) : (
+                                                    breakoutStocks.map((stock, idx) => (
+                                                        <tr key={stock.symbol || idx}>
+                                                            <td>{stock.symbol}</td>
+                                                            <td>{stock.name}</td>
+                                                            <td>{stock.sector}</td>
+                                                            <td>{stock.price}</td>
+                                                        </tr>
+                                                    ))
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     {/* Charts */}

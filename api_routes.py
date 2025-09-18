@@ -2,11 +2,30 @@ from flask import Blueprint, request, jsonify, session
 from werkzeug.security import check_password_hash, generate_password_hash
 from flask_login import login_user, logout_user, current_user, login_required
 from app import db
-from models import User
+from models import User, Watchlist
 import uuid
 from collections import defaultdict
 
 api = Blueprint('api', __name__, url_prefix='/api')
+
+# Entry Zone and Breakout Stocks endpoints (user-facing)
+@api.route('/stocks/entry-zone', methods=['GET'])
+def get_entry_zone_stocks_user():
+    # Get all watchlists of type 'entry' (Entry Zone)
+    entry_lists = Watchlist.query.filter_by(watchlist_type='entry').all()
+    stocks = []
+    for wl in entry_lists:
+        stocks.extend(wl.stocks)
+    return jsonify({'success': True, 'stocks': stocks})
+
+@api.route('/stocks/breakout', methods=['GET'])
+def get_breakout_stocks_user():
+    # Get all watchlists of type 'breakout'
+    breakout_lists = Watchlist.query.filter_by(watchlist_type='breakout').all()
+    stocks = []
+    for wl in breakout_lists:
+        stocks.extend(wl.stocks)
+    return jsonify({'success': True, 'stocks': stocks})
 
 @api.route('/auth/me', methods=['GET'])
 def get_current_user():
