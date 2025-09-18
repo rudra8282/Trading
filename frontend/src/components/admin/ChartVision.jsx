@@ -9,20 +9,21 @@ import {
   CartesianGrid,
   Tooltip,
 } from 'recharts';
-import { ZoomIn, ZoomOut } from 'lucide-react';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import {
-  ChartContainer,
-  ChartTooltipContent,
-} from '@/components/ui/chart';
-import { generateStockData } from '@/lib/data';
+
+// import { ZoomIn, ZoomOut } from 'lucide-react';
+// import {
+//   Card,
+//   CardContent,
+//   CardDescription,
+//   CardHeader,
+//   CardTitle,
+// } from '@/components/ui/card';
+// import { Button } from '@/components/ui/button';
+// import {
+//   ChartContainer,
+//   ChartTooltipContent,
+// } from '@/components/ui/chart';
+// import { generateStockData } from '@/lib/data';
 
 const MIN_ZOOM_POINTS = 20;
 

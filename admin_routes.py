@@ -3,8 +3,10 @@ from flask import Blueprint, render_template, session, redirect, url_for, jsonif
 import datetime
 import csv
 import io
-from models import StockScreening, Watchlist, User
+import models
 from app import db
+User = models.User
+Watchlist = models.Watchlist
 import json
 
 admin_bp = Blueprint('admin', __name__)
@@ -520,29 +522,63 @@ def get_stocks_by_industry():
         'total_stocks': len(MOCK_STOCKS)
     })
 
+
 @admin_bp.route('/admin/api/stocks', methods=['POST'])
 def add_stock():
-    """Add a new stock"""
+    """Add a new stock to a watchlist (Entry Zone or Breakout)"""
     if not require_admin_session():
         return jsonify({'error': 'Unauthorized'}), 401
-    
+
     data = request.get_json()
-    
-    new_stock = {
-        'id': str(len(MOCK_STOCKS) + 1),
-        'symbol': data.get('symbol', '').upper(),
-        'name': data.get('name', ''),
-        'sector': data.get('sector', ''),
-        'price': float(data.get('price', 0)),
-        'change_percent': float(data.get('change_percent', 0))
+    symbol = data.get('symbol', '').upper()
+    name = data.get('name', '')
+    sector = data.get('sector', '')
+    price = float(data.get('price', 0))
+    change_percent = float(data.get('change_percent', 0))
+    watchlist_type = data.get('watchlist_type', 'entry')  # 'entry' or 'breakout'
+
+    # Find or create the admin's watchlist for the given type
+
+    admin_user = User.query.filter_by(email='admin@tradinggrow.com').first()
+    if not admin_user:
+        # Create admin user if missing
+        try:
+            admin_user = User(email='admin@tradinggrow.com', full_name='Admin User', is_admin=True)
+            db.session.add(admin_user)
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'error': f'Failed to create admin user: {str(e)}'}), 500
+
+    watchlist = Watchlist.query.filter_by(user_id=admin_user.id, watchlist_type=watchlist_type).first()
+    if not watchlist:
+        try:
+            watchlist = Watchlist(name=f"Admin {watchlist_type.title()} Stocks", user_id=admin_user.id, watchlist_type=watchlist_type)
+            db.session.add(watchlist)
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'error': f'Failed to create watchlist: {str(e)}'}), 500
+
+    # Add the stock to the watchlist
+    stock_data = {
+        'symbol': symbol,
+        'name': name,
+        'sector': sector,
+        'price': price,
+        'change_percent': change_percent
     }
-    
-    MOCK_STOCKS.append(new_stock)
-    
+    try:
+        watchlist.add_stock(stock_data)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'Failed to add stock: {str(e)}'}), 500
+
     return jsonify({
         'success': True,
-        'message': 'Stock added successfully',
-        'stock': new_stock
+        'message': f'Stock added to {watchlist_type} watchlist',
+        'stock': stock_data
     })
 
 @admin_bp.route('/admin/api/stocks/<stock_id>', methods=['DELETE'])

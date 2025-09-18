@@ -250,29 +250,5 @@ const StockScreening = () => {
     );
 };
 
+
 export default StockScreening;
-                                                                                                                    <button 
-                                                                                                                        className="btn btn-sm btn-outline-primary"
-                                                                                                                        onClick={() => viewScreeningResults(screening)}
-                                                                                                                    >
-                                                                                                                        <i className="fas fa-eye"></i>
-                                                                                                                    </button>
-                                                                                                                    <button 
-                                                                                                                        className="btn btn-sm btn-outline-success"
-                                                                                                                        onClick={() => updateScreening(screening.id)}
-                                                                                                                    >
-                                                                                                                        <i className="fas fa-sync"></i>
-                                                                                                                    </button>
-                                                                                                                    <button 
-                                                                                                                        className="btn btn-sm btn-outline-danger"
-                                                                                                                        onClick={() => deleteScreening(screening.id)}
-                                                                                                                    >
-                                                                                                                        <i className="fas fa-trash"></i>
-                                                                                                                    </button>
-                                                                                                                </div>
-                                                                                                            </td>
-                                                                                <div className="modal-content">
-                                                                                    <div className="modal-header">
-                                                                                        <h5 className="modal-title">Create New Stock Screening</h5>
-                                                                                        <button 
-                                                                                            type="button" 

@@ -8,10 +8,11 @@ from collections import defaultdict
 
 api = Blueprint('api', __name__, url_prefix='/api')
 
+
 # Entry Zone and Breakout Stocks endpoints (user-facing)
 @api.route('/stocks/entry-zone', methods=['GET'])
 def get_entry_zone_stocks_user():
-    # Get all watchlists of type 'entry' (Entry Zone)
+    # Get all watchlists of type 'entry' (Entry Zone) from DB
     entry_lists = Watchlist.query.filter_by(watchlist_type='entry').all()
     stocks = []
     for wl in entry_lists:
@@ -20,7 +21,7 @@ def get_entry_zone_stocks_user():
 
 @api.route('/stocks/breakout', methods=['GET'])
 def get_breakout_stocks_user():
-    # Get all watchlists of type 'breakout'
+    # Get all watchlists of type 'breakout' from DB
     breakout_lists = Watchlist.query.filter_by(watchlist_type='breakout').all()
     stocks = []
     for wl in breakout_lists:

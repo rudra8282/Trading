@@ -25,7 +25,6 @@ ChartJS.register(
 
 const UserDashboard = () => {
     const [user, setUser] = useState(null);
-    const [watchlists, setWatchlists] = useState([]);
     const [sectorData, setSectorData] = useState([]);
     const [industryData, setIndustryData] = useState({});
     const [loading, setLoading] = useState(true);
@@ -1166,14 +1165,5 @@ const UserDashboard = () => {
 
 export default UserDashboard;
 
-MOCK_USERS = [
-    {
-        'id': '1',
-        'email': 'admin@tradinggrow.com',
-        'full_name': 'Admin User',
-        'subscription_tier': 'pro',
-        'is_admin': True,
-        'created_at': '2024-01-01T00:00:00Z'
-    },
-    // ... other users ...
-]
+
+// import { MOCK_USERS } from './mockUsers';
