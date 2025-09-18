@@ -13,6 +13,7 @@ const AdminDashboard = ({ initialData }) => {
     const [stocks, setStocks] = useState([]);
     const [subscriptionRequests, setSubscriptionRequests] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [screenings, setScreenings] = useState([]);
 
     const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
@@ -30,6 +31,10 @@ const AdminDashboard = ({ initialData }) => {
         { month: 'Apr', users: Math.floor(stats.total_users * 0.9) },
         { month: 'May', users: stats.total_users },
     ];
+
+
+    // Wrapper for refreshing data
+    const refreshData = () => loadAdminData();
 
     // Load admin data on component mount
     useEffect(() => {
@@ -65,6 +70,13 @@ const AdminDashboard = ({ initialData }) => {
             if (stocksResponse.ok) {
                 const stocksData = await stocksResponse.json();
                 setStocks(stocksData.stocks || []);
+            }
+
+            // Load recent screenings
+            const screeningsResponse = await fetch('/admin/api/recent-screenings');
+            if (screeningsResponse.ok) {
+                const screeningsData = await screeningsResponse.json();
+                setScreenings(screeningsData.screenings || []);
             }
         } catch (error) {
             console.error('Failed to load admin data:', error);

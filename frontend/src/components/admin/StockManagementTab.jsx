@@ -198,49 +198,31 @@ const StockManagementTab = ({ stocks, onRefresh }) => {
                     <thead className="table-light">
                         <tr>
                             <th>Symbol</th>
-                            <th>Name</th>
-                            <th>Sector</th>
-                            <th>Price</th>
-                            <th>Change %</th>
+                            <th>Industry</th>
+                            <th>Market Cap</th>
+                            <th>Market Cap (Formatted)</th>
+                            <th>Latest Volume</th>
+                            <th>MRS Current</th>
+                            <th>Weekly Growth</th>
+                            <th>Total Stocks</th>
+                            <th>Total Market Cap (Formatted)</th>
+                            <th>Price vs SMA (%)</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {stocks.map(stock => (
                             <tr key={stock.id || stock.symbol}>
-                                <td>
-                                    <strong>{stock.symbol}</strong>
-                                </td>
-                                <td>{stock.name}</td>
-                                <td>
-                                    <span className="badge bg-secondary">{stock.sector}</span>
-                                </td>
-                                <td>
-                                    <div className="input-group input-group-sm" style={{width: '120px'}}>
-                                        <span className="input-group-text">$</span>
-                                        <input 
-                                            type="number" 
-                                            className="form-control"
-                                            value={stock.price}
-                                            step="0.01"
-                                            onChange={(e) => {
-                                                if (e.key === 'Enter') {
-                                                    handleUpdatePrice(stock.id, e.target.value);
-                                                }
-                                            }}
-                                            onBlur={(e) => {
-                                                if (e.target.value !== stock.price) {
-                                                    handleUpdatePrice(stock.id, e.target.value);
-                                                }
-                                            }}
-                                        />
-                                    </div>
-                                </td>
-                                <td>
-                                    <span className={`badge ${stock.change_percent >= 0 ? 'bg-success' : 'bg-danger'}`}>
-                                        {stock.change_percent >= 0 ? '+' : ''}{stock.change_percent}%
-                                    </span>
-                                </td>
+                                <td><strong>{stock.symbol}</strong></td>
+                                <td>{stock.industry}</td>
+                                <td>{stock.market_cap}</td>
+                                <td>{stock.market_cap_formatted}</td>
+                                <td>{stock.latest_volume}</td>
+                                <td>{stock.mrs_current}</td>
+                                <td>{stock.weekly_growth}</td>
+                                <td>{stock.total_stocks}</td>
+                                <td>{stock.total_market_cap_formatted}</td>
+                                <td>{stock.price_vs_sma_pct}</td>
                                 <td>
                                     <div className="btn-group btn-group-sm">
                                         <button 
@@ -388,13 +370,13 @@ const StockManagementTab = ({ stocks, onRefresh }) => {
                                         <h6 className="alert-heading">
                                             <i className="fas fa-info-circle me-2"></i>CSV Format Requirements
                                         </h6>
-                                        <p className="mb-2">Your CSV file should contain the following columns:</p>
-                                        <code>symbol,name,sector,industry_type,industry_code,price,change_percent</code>
+                                        <p className="mb-2">Your CSV file should contain the following columns <b>(in this order)</b>:</p>
+                                        <code>symbol,industry,market_cap,market_cap_formatted,latest_volume,mrs_current,weekly_growth,total_stocks,total_market_cap_formatted,price_vs_sma_pct</code>
                                         <hr />
                                         <p className="mb-0"><strong>Example:</strong></p>
                                         <small>
-                                            AAPL,Apple Inc.,Technology,Software,TECH001,175.50,2.3<br />
-                                            GOOGL,Alphabet Inc.,Technology,Internet,TECH002,2850.25,-1.2
+                                            AAPL,Technology,2500000000000,"$2.5T",1200000,175.50,2.3,5000,"$10T",5.2<br />
+                                            GOOGL,Internet,1800000000000,"$1.8T",950000,2850.25,1.8,4000,"$8T",4.7
                                         </small>
                                     </div>
                                 </div>

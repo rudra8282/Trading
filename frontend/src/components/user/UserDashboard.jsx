@@ -232,9 +232,9 @@ const UserDashboard = () => {
                 </div>
 
 
-                {/* Industry Type Dropdown (always visible) */}
+                {/* Industry Sectors Dropdown (always visible) */}
                 <div className="mb-2">
-                    <label className="form-label text-white-50 small">Industry Type</label>
+                    <label className="form-label text-white-50 small">Industry Sectors</label>
                     <select 
                         className="form-select form-select-sm bg-secondary text-white border-secondary"
                         value={selectedSector}

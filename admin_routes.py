@@ -473,38 +473,34 @@ def bulk_upload_stocks():
         for row_num, row in enumerate(csv_reader, start=2):  # Start from 2 to account for header
             try:
                 # Validate required fields
-                required_fields = ['symbol', 'name', 'sector', 'price']
+                required_fields = ['symbol', 'industry', 'market_cap', 'market_cap_formatted', 'latest_volume', 'mrs_current', 'weekly_growth', 'total_stocks', 'total_market_cap_formatted', 'price_vs_sma_pct']
                 missing_fields = [field for field in required_fields if not row.get(field, '').strip()]
-                
                 if missing_fields:
                     error_count += 1
                     errors.append(f"Row {row_num}: Missing required fields: {', '.join(missing_fields)}")
                     continue
-                
                 # Process the stock data
                 stock_data = {
                     'id': str(len(MOCK_STOCKS) + processed_count + 1),
                     'symbol': row['symbol'].strip().upper(),
-                    'name': row['name'].strip(),
-                    'sector': row['sector'].strip(),
-                    'industry_type': row.get('industry_type', '').strip(),
-                    'industry_code': row.get('industry_code', '').strip(),
-                    'price': float(row['price']),
-                    'change_percent': float(row.get('change_percent', 0))
+                    'industry': row['industry'].strip(),
+                    'market_cap': float(row['market_cap']),
+                    'market_cap_formatted': row['market_cap_formatted'].strip(),
+                    'latest_volume': int(row['latest_volume']),
+                    'mrs_current': float(row['mrs_current']),
+                    'weekly_growth': float(row['weekly_growth']),
+                    'total_stocks': int(row['total_stocks']),
+                    'total_market_cap_formatted': row['total_market_cap_formatted'].strip(),
+                    'price_vs_sma_pct': float(row['price_vs_sma_pct'])
                 }
-                
                 # Check for duplicate symbols
                 existing_stock = next((s for s in MOCK_STOCKS if s['symbol'] == stock_data['symbol']), None)
                 if existing_stock:
-                    # Update existing stock
                     existing_stock.update(stock_data)
-                    existing_stock['id'] = existing_stock['id']  # Keep original ID
+                    existing_stock['id'] = existing_stock['id']
                 else:
-                    # Add new stock
                     MOCK_STOCKS.append(stock_data)
-                
                 processed_count += 1
-                
             except ValueError as e:
                 error_count += 1
                 errors.append(f"Row {row_num}: Invalid data format - {str(e)}")
